@@ -137,4 +137,15 @@ pids
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-.pnp.* 
+.pnp.*
+
+# Google Cloud deployment files
+key.json
+*.key
+service-account-*.json
+gcloud-*.json
+
+# Deployment artifacts
+deploy/
+dist/
+build/ 

@@ -1,0 +1,35 @@
+runtime: nodejs18
+service: default
+
+env_variables:
+  NODE_ENV: production
+  PORT: 8080
+  OPENSEARCH_URL: "https://your-opensearch-endpoint.com"
+  OPENSEARCH_USERNAME: "admin"
+  OPENSEARCH_PASSWORD: "your-password"
+  MAX_FILE_SIZE: "10485760"
+  UPLOAD_PATH: "./uploads"
+
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 0
+  max_instances: 10
+  target_throughput_utilization: 0.6
+
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10
+
+handlers:
+  - url: /api/.*
+    script: auto
+    secure: always
+
+  - url: /.*
+    static_files: client/build/index.html
+    upload: client/build/index.html
+    secure: always
+
+includes:
+  - gae_include.yaml 

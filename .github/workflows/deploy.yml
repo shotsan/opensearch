@@ -1,0 +1,113 @@
+name: Deploy to Google Cloud App Engine
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: your-gcp-project-id
+  REGION: us-central1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd client && npm ci
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Build application
+      run: npm run build
+
+  deploy-staging:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd client && npm ci
+    
+    - name: Build for production
+      run: npm run build:prod
+    
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+    
+    - name: Deploy to App Engine (Staging)
+      run: |
+        gcloud app deploy app.yaml --version staging --quiet
+        gcloud app versions list --filter="version=staging" --format="value(id)" > version.txt
+    
+    - name: Get App URL
+      run: |
+        echo "App URL: https://staging-dot-${{ env.PROJECT_ID }}.appspot.com"
+        echo "App URL: https://staging-dot-${{ env.PROJECT_ID }}.appspot.com" >> $GITHUB_STEP_SUMMARY
+
+  deploy-production:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm ci
+        cd client && npm ci
+    
+    - name: Build for production
+      run: npm run build:prod
+    
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        export_default_credentials: true
+    
+    - name: Deploy to App Engine (Production)
+      run: |
+        gcloud app deploy app.yaml --version prod --quiet
+        gcloud app versions list --filter="version=prod" --format="value(id)" > version.txt
+    
+    - name: Get App URL
+      run: |
+        echo "Production App URL: https://${{ env.PROJECT_ID }}.appspot.com"
+        echo "Production App URL: https://${{ env.PROJECT_ID }}.appspot.com" >> $GITHUB_STEP_SUMMARY 
