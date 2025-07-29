@@ -7,6 +7,16 @@ yarn-error.log*
 # Production builds
 client/build/
 client/dist/
+client/.next/
+client/out/
+
+# PDF worker build files
+client/public/pdf.worker.*.js
+
+# Backup files
+*.backup
+*.bak
+*.orig
 
 # Environment variables
 .env
@@ -32,49 +42,55 @@ ehthumbs.db
 Thumbs.db
 
 # OpenSearch data and large files
-elasticsearch-8.11.0/data/
-elasticsearch-8.11.0/logs/
-elasticsearch-8.11.0/jdk.app/
-elasticsearch-8.11.0/modules/x-pack-ml/platform/darwin-aarch64/controller.app/Contents/lib/libtorch_cpu.dylib
-elasticsearch-8.11.0/modules/x-pack-ml/platform/darwin-aarch64/controller.app/Contents/lib/libtorch_cpu.dylib
-elasticsearch-8.11.0/modules/x-pack-ml/platform/darwin-aarch64/controller.app/Contents/lib/libtorch_cpu.dylib
-
-# Uploaded documents
+elasticsearch-8.11.0/
 uploads/
-*.pdf
-*.html
-*.htm
-*.doc
-*.docx
-*.txt
-*.rtf
+*.log
+
+# Build artifacts
+*.tgz
+*.tar.gz
+*.zip
 
 # Temporary files
 *.tmp
 *.temp
-temp-*
+.tmp/
+.temp/
 
-# Logs
-logs/
-*.log
+# Coverage reports
+coverage/
+*.lcov
+
+# TypeScript build output
+*.tsbuildinfo
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Cache directories
+.cache/
+.parcel-cache/
 
 # Runtime data
-pids/
+pids
 *.pid
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage/
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-jspm_packages/
-
 # Optional npm cache directory
 .npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -86,7 +102,7 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+.env.test
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -102,7 +118,7 @@ jspm_packages/
 .vuepress/dist
 
 # Serverless directories
-.serverless
+.serverless/
 
 # FuseBox cache
 .fusebox/
@@ -111,4 +127,14 @@ jspm_packages/
 .dynamodb/
 
 # TernJS port file
-.tern-port 
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.* 
