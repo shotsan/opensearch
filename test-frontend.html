@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Search Test</title>
+</head>
+<body>
+    <h1>Frontend Search Test</h1>
+    <input type="text" id="searchInput" placeholder="Enter search term..." value="JavaScript">
+    <button onclick="testSearch()">Test Search</button>
+    <div id="results"></div>
+
+    <script>
+        async function testSearch() {
+            const query = document.getElementById('searchInput').value;
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                console.log('Testing search for:', query);
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                console.log('Search response:', data);
+                resultsDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                if (data.results && data.results.length > 0) {
+                    console.log('✅ Search working - found results');
+                } else {
+                    console.log('❌ Search not working - no results');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                resultsDiv.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+            }
+        }
+        
+        // Auto-test on load
+        window.onload = testSearch;
+    </script>
+</body>
+</html>

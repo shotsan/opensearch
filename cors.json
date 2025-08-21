@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://opensearch-doc-search.appspot.com", "http://localhost:3000", "http://localhost:3001"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+] 

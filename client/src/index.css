@@ -14,27 +14,27 @@
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200;
   }
 
   .btn-primary {
-    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 hover:scale-105 active:scale-95;
   }
 
   .btn-secondary {
-    @apply btn bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-primary-500;
+    @apply btn bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-primary-500 hover:scale-105 active:scale-95;
   }
 
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 hover:scale-105 active:scale-95;
   }
 
   .input {
-    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm;
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-all duration-200;
   }
 
   .card {
-    @apply bg-white overflow-hidden shadow rounded-lg;
+    @apply bg-white overflow-hidden shadow rounded-lg transition-all duration-300 hover:shadow-lg;
   }
 
   .card-header {
@@ -68,6 +68,100 @@
   .badge-danger {
     @apply badge bg-red-100 text-red-800;
   }
+
+  /* Dashboard Process Flow Animations */
+  .process-step {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .process-step:hover {
+    @apply transform -translate-y-1 shadow-xl;
+  }
+
+  .process-step-icon {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .process-step:hover .process-step-icon {
+    @apply transform scale-110;
+  }
+
+  /* Search Page Button Fixes */
+  .search-button-container {
+    @apply flex gap-2 flex-shrink-0;
+  }
+
+  .search-button {
+    @apply whitespace-nowrap min-w-[80px] transition-all duration-200;
+  }
+
+  .search-button:hover {
+    @apply transform scale-105;
+  }
+
+  /* Loading Animations */
+  .loading-pulse {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+
+  .loading-spin {
+    @apply animate-spin rounded-full border-2 border-gray-300 border-t-primary-600;
+  }
+
+  /* Fade In Animation */
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide In Animation */
+  .slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Bounce Animation */
+  .bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }
 
 @layer utilities {
@@ -82,6 +176,33 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Custom animations */
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
+    to {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+    }
   }
 }
 
@@ -190,5 +311,62 @@
   
   .html-content-frame iframe {
     min-height: 400px !important;
+  }
+
+  /* Dashboard mobile improvements */
+  .card {
+    @apply mx-2;
+  }
+
+  .card-header {
+    @apply px-3 py-4;
+  }
+
+  .card-body {
+    @apply px-3 py-4;
+  }
+
+  /* Quick action cards mobile optimization */
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
+    gap: 0.75rem;
+  }
+
+  /* Mobile touch targets */
+  a[href] {
+    min-height: 44px;
+  }
+
+  /* Mobile text sizing */
+  h1 {
+    @apply text-xl;
+  }
+
+  h3 {
+    @apply text-base;
+  }
+
+  /* Mobile spacing */
+  .space-y-6 > * + * {
+    margin-top: 1.25rem;
+  }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+  .card-header {
+    @apply px-2 py-3;
+  }
+
+  .card-body {
+    @apply px-2 py-3;
+  }
+
+  .grid.grid-cols-1.sm\:grid-cols-2.lg\:grid-cols-4 {
+    gap: 0.5rem;
+  }
+
+  /* Ensure cards don't overflow on very small screens */
+  .card {
+    @apply mx-1;
   }
 }

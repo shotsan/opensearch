@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useSearchParams, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQuery } from "react-query";
 import { ArrowLeft, FileText, Calendar, Download, Tag, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { getDocument, getDocumentPages, getPDFUrl } from "../services/api";
@@ -7,7 +7,8 @@ import * as pdfjsLib from 'pdfjs-dist';
 
 const DocumentViewPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const [searchParams] = useSearchParams();
+  // Remove unused searchParams
+  // const [searchParams] = useSearchParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [numPages, setNumPages] = useState(0);
   const [scale, setScale] = useState(1.5);
@@ -15,6 +16,7 @@ const DocumentViewPage: React.FC = () => {
   const [pdfDocument, setPdfDocument] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const renderTaskRef = useRef<any>(null); // Track current render operation
 
   const { data: documentData, isLoading: documentLoading } = useQuery(
     ["document", id],
@@ -33,7 +35,7 @@ const DocumentViewPage: React.FC = () => {
   );
 
   // Get the file type from document data
-  const fileType = documentData?.document?.fileType?.toLowerCase();
+  const fileType = documentData?.fileType?.toLowerCase();
   
   // Debug logging
   console.log('Document data:', documentData);
@@ -229,39 +231,73 @@ ${content}
     if (!canvasRef.current) return;
     
     try {
+      // Cancel any previous rendering operation
+      if (renderTaskRef.current) {
+        console.log('🚫 Cancelling previous render operation');
+        renderTaskRef.current.cancel();
+        renderTaskRef.current = null;
+      }
+      
       const page = await pdf.getPage(pageNum);
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
       
-      const viewport = page.getViewport({ scale });
+      if (!context) {
+        console.error('Failed to get canvas context');
+        return;
+      }
+      
+      // Get page rotation and handle it properly
+      const rotation = page.rotate || 0;
+      console.log(`📄 Page ${pageNum} rotation:`, rotation);
+      
+      // Get viewport with proper rotation handling
+      const viewport = page.getViewport({ 
+        scale,
+        rotation: 0 // Always start with 0, handle rotation separately if needed
+      });
+      
+      console.log('📐 Viewport dimensions:', viewport.width, 'x', viewport.height);
+      console.log('📐 Viewport transform:', viewport.transform);
+      
       canvas.height = viewport.height;
       canvas.width = viewport.width;
+      
+      // Clear the canvas first
+      context.clearRect(0, 0, canvas.width, canvas.height);
       
       const renderContext = {
         canvasContext: context,
         viewport: viewport
       };
       
-      await page.render(renderContext).promise;
+      // Start the render operation and store the task
+      renderTaskRef.current = page.render(renderContext);
+      await renderTaskRef.current.promise;
       
-    } catch (error) {
-      console.error('Error rendering page:', error);
+      console.log('✅ Page rendered successfully');
+      renderTaskRef.current = null;
+      
+    } catch (error: any) {
+      if (error?.name === 'RenderingCancelledException') {
+        console.log('🚫 Rendering was cancelled (this is normal)');
+      } else {
+        console.error('❌ Error rendering page:', error);
+      }
     }
   };
 
   const goToPage = (pageNum: number) => {
     if (pageNum >= 1 && pageNum <= numPages && pdfDocument) {
       setCurrentPage(pageNum);
-      renderPage(pdfDocument, pageNum);
+      // Don't call renderPage here - let useEffect handle it
     }
   };
 
   const changeScale = (newScale: number) => {
     const clampedScale = Math.max(0.8, Math.min(3.0, newScale));
     setScale(clampedScale);
-    if (pdfDocument) {
-      renderPage(pdfDocument, currentPage);
-    }
+    // Don't call renderPage here - let useEffect handle it
   };
 
   // Load PDF when component mounts
@@ -269,14 +305,14 @@ ${content}
     if (id) {
       loadPDF();
     }
-  }, [id]);
+  }, []);
 
-  // Re-render page when search term changes
+  // Re-render page when pdfDocument loads or page/scale changes
   useEffect(() => {
     if (pdfDocument && currentPage) {
       renderPage(pdfDocument, currentPage);
     }
-  }, [pdfDocument, currentPage]);
+  }, [pdfDocument, currentPage, scale]);
 
 
 
@@ -293,7 +329,7 @@ ${content}
     );
   }
 
-  if (!documentData?.document) {
+  if (!documentData) {
     return (
       <div className="space-y-6">
         <div className="text-center py-8">
@@ -307,7 +343,7 @@ ${content}
     );
   }
 
-  const document = documentData.document;
+  const document = documentData;
 
   return (
     <div className="space-y-6">
@@ -454,7 +490,10 @@ ${content}
                   <canvas
                     ref={canvasRef}
                     className="border border-gray-300 rounded-lg shadow-lg"
-                    style={{ maxWidth: '100%', height: 'auto' }}
+                    style={{ 
+                      maxWidth: '100%', 
+                      height: 'auto'
+                    }}
                   />
                 )}
               </div>

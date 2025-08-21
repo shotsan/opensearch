@@ -290,13 +290,13 @@ const getAllDocuments = async (options = {}) => {
 const getSearchSuggestions = async (query) => {
   const searchBody = {
     query: {
-      match_phrase_prefix: {
-        title: {
-          query: query,
-        },
+      multi_match: {
+        query: query,
+        fields: ['title^2', 'content'],
+        type: 'phrase_prefix'
       },
     },
-    _source: ["title"],
+    _source: ["title", "filename"],
     size: 5,
   };
 

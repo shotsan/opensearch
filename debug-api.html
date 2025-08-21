@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Debug</title>
+</head>
+<body>
+    <h1>API Debug Test</h1>
+    <button onclick="testAPI()">Test API Call</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing...</p>';
+            
+            try {
+                // Test the exact URL the React app would use
+                const response = await fetch('http://localhost:4001/api/search?q=JavaScript');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>✅ API Call Successful!</h3>
+                    <p>URL: http://localhost:4001/api/search?q=JavaScript</p>
+                    <p>Status: ${response.status}</p>
+                    <p>Total Results: ${data.total}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ API Call Failed!</h3>
+                    <p>Error: ${error.message}</p>
+                    <p>This means the frontend cannot reach the backend.</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -7,8 +7,11 @@ const {
   advancedSearch,
 } = require("../controllers/searchController");
 
-// Basic search
+// Basic search (GET with query params)
 router.get("/", search);
+
+// Basic search (POST with body for compatibility)
+router.post("/", search);
 
 // Get search suggestions
 router.get("/suggestions", getSuggestions);

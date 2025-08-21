@@ -18,6 +18,12 @@ const UploadPage: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<{
     [key: string]: number;
   }>({});
+  const [uploadErrors, setUploadErrors] = useState<{
+    [key: string]: string;
+  }>({});
+  const [uploadDetails, setUploadDetails] = useState<{
+    [key: string]: any;
+  }>({});
   const queryClient = useQueryClient();
 
   const { data: supportedTypes }: { data: any } = useQuery(
@@ -27,33 +33,82 @@ const UploadPage: React.FC = () => {
 
   const uploadMutation = useMutation(uploadDocument, {
     onSuccess: (data, variables) => {
+      console.log("🎉 Upload mutation success:", { data, fileName: variables.name });
+      
       // Transform the response to match expected structure
       const uploadedFile = {
-        documentId: data.doc_id,
+        documentId: data.document?.id || data.doc_id,
         document: {
-          title: data.filename,
-          filename: data.filename,
-          fileType: data.fileType,
-          fileSize: data.fileSize,
-          uploadDate: new Date().toISOString(),
+          title: data.document?.title || data.filename,
+          filename: data.document?.originalName || data.filename,
+          fileType: data.document?.fileType || data.fileType,
+          fileSize: data.document?.fileSize || data.fileSize,
+          uploadDate: data.document?.uploadDate || new Date().toISOString(),
         },
         file: variables,
       };
+      
       setUploadedFiles((prev) => [...prev, uploadedFile]);
       setUploadProgress((prev) => ({ ...prev, [variables.name]: 100 }));
+      setUploadErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[variables.name];
+        return newErrors;
+      });
+      setUploadDetails((prev) => ({
+        ...prev,
+        [variables.name]: {
+          status: 'success',
+          response: data,
+          completedAt: new Date().toISOString()
+        }
+      }));
+      
       queryClient.invalidateQueries("documents");
     },
-    onError: (error, variables) => {
+    onError: (error: any, variables) => {
+      console.error("💥 Upload mutation error:", { error, fileName: variables.name });
+      
       setUploadProgress((prev) => ({ ...prev, [variables.name]: -1 }));
+      setUploadErrors((prev) => ({
+        ...prev,
+        [variables.name]: error.response?.data?.error || error.message || 'Upload failed'
+      }));
+      setUploadDetails((prev) => ({
+        ...prev,
+        [variables.name]: {
+          status: 'error',
+          error: error.response?.data || error.message,
+          failedAt: new Date().toISOString()
+        }
+      }));
     },
   });
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
+      console.log("📁 Files dropped:", acceptedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+      
       acceptedFiles.forEach((file) => {
+        console.log(`🚀 Starting upload for: ${file.name} (${file.size} bytes)`);
+        
         setUploadProgress((prev) => ({ ...prev, [file.name]: 0 }));
+        setUploadErrors((prev) => {
+          const newErrors = { ...prev };
+          delete newErrors[file.name];
+          return newErrors;
+        });
+        setUploadDetails((prev) => ({
+          ...prev,
+          [file.name]: {
+            status: 'uploading',
+            startedAt: new Date().toISOString(),
+            fileSize: file.size,
+            fileType: file.type
+          }
+        }));
 
-        // Simulate upload progress
+        // Simulate upload progress (will be overridden by real progress)
         const interval = setInterval(() => {
           setUploadProgress((prev) => {
             const current = prev[file.name] || 0;
@@ -83,9 +138,20 @@ const UploadPage: React.FC = () => {
       "application/rtf": [".rtf"],
     },
     maxSize: 10 * 1024 * 1024, // 10MB
+    onDropRejected: (rejectedFiles) => {
+      console.error("❌ Files rejected:", rejectedFiles);
+      rejectedFiles.forEach(({ file, errors }) => {
+        console.error(`File ${file.name} rejected:`, errors);
+        setUploadErrors((prev) => ({
+          ...prev,
+          [file.name]: errors.map(e => e.message).join(', ')
+        }));
+      });
+    }
   });
 
   const removeFile = (fileName: string) => {
+    console.log(`🗑️ Removing file from UI: ${fileName}`);
     setUploadedFiles((prev) =>
       prev.filter((file) => file.filename !== fileName),
     );
@@ -93,6 +159,16 @@ const UploadPage: React.FC = () => {
       const newProgress = { ...prev };
       delete newProgress[fileName];
       return newProgress;
+    });
+    setUploadErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[fileName];
+      return newErrors;
+    });
+    setUploadDetails((prev) => {
+      const newDetails = { ...prev };
+      delete newDetails[fileName];
+      return newDetails;
     });
   };
 
@@ -169,45 +245,56 @@ const UploadPage: React.FC = () => {
           </div>
           <div className="card-body">
             <div className="space-y-4">
-              {Object.entries(uploadProgress).map(([fileName, progress]) => (
-                <div
-                  key={fileName}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center space-x-3">
-                    <File className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {fileName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {progress === 100
-                          ? "Upload complete"
-                          : progress === -1
-                            ? "Upload failed"
-                            : `Uploading... ${progress}%`}
-                      </p>
+              {Object.entries(uploadProgress).map(([fileName, progress]) => {
+                const error = uploadErrors[fileName];
+                const details = uploadDetails[fileName];
+                
+                return (
+                  <div
+                    key={fileName}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <File className="h-5 w-5 text-gray-400" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          {fileName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {details?.fileSize && formatFileSize(details.fileSize)}
+                        </p>
+                        {error && (
+                          <p className="text-xs text-red-600 mt-1">
+                            Error: {error}
+                          </p>
+                        )}
+                        {details?.status === 'uploading' && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            Started: {new Date(details.startedAt).toLocaleTimeString()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {progress === 100 && (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      )}
+                      {progress === -1 && (
+                        <AlertCircle className="h-5 w-5 text-red-500" />
+                      )}
+                      {progress >= 0 && progress < 100 && (
+                        <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                      )}
+                      <button
+                        onClick={() => removeFile(fileName)}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {progress === 100 && (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    )}
-                    {progress === -1 && (
-                      <AlertCircle className="h-5 w-5 text-red-500" />
-                    )}
-                    {progress >= 0 && progress < 100 && (
-                      <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-                    )}
-                    <button
-                      onClick={() => removeFile(fileName)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

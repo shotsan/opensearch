@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 
 # Default to staging
 ENVIRONMENT=${1:-staging}
-PROJECT_ID="your-gcp-project-id"
+PROJECT_ID="opensearch-doc-search"
 
 echo -e "${YELLOW}🚀 Starting deployment to $ENVIRONMENT...${NC}"
 

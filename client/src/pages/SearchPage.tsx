@@ -1,15 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useQuery } from "react-query";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import {
   Search,
   Filter,
-  FileText,
-  Calendar,
-  Download,
-  Eye,
-  Tag,
-  Clock,
 } from "lucide-react";
 import { searchDocuments, getSearchSuggestions } from "../services/api";
 import SearchSnippetResult from "../components/SearchSnippetResult";
@@ -94,17 +88,7 @@ const SearchPage: React.FC = () => {
     setSearchParams(newSearchParams);
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
 
   return (
     <div className="space-y-6">
@@ -254,8 +238,8 @@ const SearchPage: React.FC = () => {
               {/* Results Summary */}
               <div className="flex justify-between items-center">
                 <p className="text-sm text-gray-500">
-                  Found {searchResults.total} results in{" "}
-                  {searchResults.searchTime}ms
+                  Found {searchResults?.total || 0} results in{" "}
+                  {searchResults?.searchTime || 0}ms
                 </p>
                 <div className="flex gap-2">
                   <select className="input text-sm">
@@ -268,7 +252,7 @@ const SearchPage: React.FC = () => {
 
               {/* Results List */}
               <div className="space-y-4">
-                {searchResults.results.map((doc: any) => (
+                {searchResults?.results?.map((doc: any) => (
                   <SearchSnippetResult 
                     key={doc.id} 
                     result={doc} 
@@ -278,21 +262,21 @@ const SearchPage: React.FC = () => {
               </div>
 
               {/* Pagination */}
-              {searchResults.pagination.pages > 1 && (
+              {(searchResults?.pagination?.pages || 0) > 1 && (
                 <div className="flex justify-center">
                   <nav className="flex items-center gap-1">
                     <button
                       onClick={() =>
-                        goToPage(searchResults.pagination.page - 1)
+                        goToPage((searchResults?.pagination?.page || 1) - 1)
                       }
-                      disabled={searchResults.pagination.page <= 1}
+                      disabled={(searchResults?.pagination?.page || 1) <= 1}
                       className="btn btn-secondary disabled:opacity-50"
                     >
                       Previous
                     </button>
 
                     {Array.from(
-                      { length: Math.min(5, searchResults.pagination.pages) },
+                      { length: Math.min(5, searchResults?.pagination?.pages || 1) },
                       (_, i) => {
                         const page = i + 1;
                         return (
@@ -300,7 +284,7 @@ const SearchPage: React.FC = () => {
                             key={page}
                             onClick={() => goToPage(page)}
                             className={`px-3 py-2 text-sm font-medium rounded-md ${
-                              page === searchResults.pagination.page
+                              page === (searchResults?.pagination?.page || 1)
                                 ? "bg-primary-600 text-white"
                                 : "text-gray-500 hover:text-gray-700"
                             }`}
@@ -313,11 +297,11 @@ const SearchPage: React.FC = () => {
 
                     <button
                       onClick={() =>
-                        goToPage(searchResults.pagination.page + 1)
+                        goToPage((searchResults?.pagination?.page || 1) + 1)
                       }
                       disabled={
-                        searchResults.pagination.page >=
-                        searchResults.pagination.pages
+                        (searchResults?.pagination?.page || 1) >=
+                        (searchResults?.pagination?.pages || 1)
                       }
                       className="btn btn-secondary disabled:opacity-50"
                     >

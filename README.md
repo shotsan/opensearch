@@ -79,9 +79,26 @@ cd ..
 ```
 
 ### 4. Start the Application
+
+#### Option A: Quick Start (Recommended)
+```bash
+# Start OpenSearch first (in one terminal)
+cd elasticsearch-8.11.0
+./bin/elasticsearch
+
+# Start everything else (in another terminal)
+./start-local.sh
+
+# Start frontend (in a third terminal)
+cd client
+npm start
+```
+
+#### Option B: Manual Start
 ```bash
 # Start OpenSearch
-./start-opensearch.sh
+cd elasticsearch-8.11.0
+./bin/elasticsearch
 
 # In a new terminal, start the backend
 npm start

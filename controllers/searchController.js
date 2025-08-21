@@ -23,8 +23,12 @@ const logSearch = async (query, duration) => {
 // Search documents
 const search = async (req, res) => {
   try {
+    // Handle both GET (query params) and POST (body) requests
+    const searchParams = req.method === 'GET' ? req.query : req.body;
+    
     const {
       q = "",
+      query = "", // Support both 'q' and 'query' parameters
       page = 1,
       limit = 10,
       fileType,
@@ -32,14 +36,17 @@ const search = async (req, res) => {
       dateTo,
       sortBy = "_score",
       sortOrder = "desc",
-    } = req.query;
+    } = searchParams;
 
-    if (!q.trim()) {
+    // Use either 'q' or 'query' parameter
+    const searchQuery = q || query;
+
+    if (!searchQuery.trim()) {
       return res.status(400).json({ error: "Search query is required" });
     }
 
     const start = Date.now();
-    const result = await searchDocuments(q, {
+    const result = await searchDocuments(searchQuery, {
       page: parseInt(page),
       limit: parseInt(limit),
       fileType,
@@ -49,7 +56,7 @@ const search = async (req, res) => {
       sortOrder,
     });
     const duration = Date.now() - start;
-    await logSearch(q, duration);
+    await logSearch(searchQuery, duration);
 
     // Format search results with snippets
     const formattedResults = result.results.map((hit) => ({
@@ -67,7 +74,7 @@ const search = async (req, res) => {
     }));
 
     res.json({
-      query: q,
+      query: searchQuery,
       results: formattedResults,
       pagination: result.pagination,
       searchTime: duration,

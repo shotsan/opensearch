@@ -136,7 +136,7 @@ const AnalyticsPage: React.FC = () => {
                             )) *
                             100,
                         )}
-                        %
+                        % of top searches
                       </span>
                     </div>
                   </div>
@@ -154,42 +154,92 @@ const AnalyticsPage: React.FC = () => {
             </h3>
           </div>
           <div className="card-body">
-            <div className="space-y-4">
-              {fileTypeData.map((type: any, index: number) => (
-                <div
-                  key={type.type}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-secondary-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-secondary-600">
-                          {type.type.toUpperCase()}
-                        </span>
+            <div className="space-y-6">
+              {fileTypeData.map((type: any, index: number) => {
+                // Color scheme for different file types
+                const getFileTypeColors = (fileType: string) => {
+                  switch (fileType) {
+                    case 'application/pdf':
+                      return {
+                        bg: 'bg-red-50',
+                        border: 'border-red-200',
+                        text: 'text-red-700',
+                        progress: 'bg-gradient-to-r from-red-500 to-red-600',
+                        icon: 'text-red-600'
+                      };
+                    case 'text/plain':
+                      return {
+                        bg: 'bg-blue-50',
+                        border: 'border-blue-200',
+                        text: 'text-blue-700',
+                        progress: 'bg-gradient-to-r from-blue-500 to-blue-600',
+                        icon: 'text-blue-600'
+                      };
+                    case 'text/html':
+                      return {
+                        bg: 'bg-orange-50',
+                        border: 'border-orange-200',
+                        text: 'text-orange-700',
+                        progress: 'bg-gradient-to-r from-orange-500 to-orange-600',
+                        icon: 'text-orange-600'
+                      };
+                    default:
+                      return {
+                        bg: 'bg-gray-50',
+                        border: 'border-gray-200',
+                        text: 'text-gray-700',
+                        progress: 'bg-gradient-to-r from-gray-500 to-gray-600',
+                        icon: 'text-gray-600'
+                      };
+                  }
+                };
+
+                const colors = getFileTypeColors(type.type);
+                const getFileTypeLabel = (fileType: string) => {
+                  switch (fileType) {
+                    case 'application/pdf': return 'PDF';
+                    case 'text/plain': return 'Text';
+                    case 'text/html': return 'HTML';
+                    default: return fileType.split('/')[1]?.toUpperCase() || fileType;
+                  }
+                };
+
+                return (
+                  <div
+                    key={type.type}
+                    className={`p-4 rounded-lg border ${colors.bg} ${colors.border}`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-10 h-10 rounded-lg ${colors.bg} border ${colors.border} flex items-center justify-center`}>
+                          <FileText className={`h-5 w-5 ${colors.icon}`} />
+                        </div>
+                        <div>
+                          <p className={`text-sm font-semibold ${colors.text}`}>
+                            {getFileTypeLabel(type.type)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {type.count} document{type.count !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-lg font-bold ${colors.text}`}>
+                          {type.percentage}%
+                        </p>
                       </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {type.count} documents
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {type.percentage}% of total
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
+                    
+                    {/* Progress bar */}
+                    <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div
-                        className="bg-secondary-600 h-2 rounded-full"
+                        className={`h-3 rounded-full ${colors.progress} transition-all duration-500 ease-out`}
                         style={{ width: `${type.percentage}%` }}
-                      ></div>
+                      />
                     </div>
-                    <span className="text-xs text-gray-500">
-                      {type.percentage}%
-                    </span>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

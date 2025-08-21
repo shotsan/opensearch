@@ -13,7 +13,7 @@ const {
 } = require("../controllers/documentController");
 
 // Upload document
-router.post("/upload", upload.single("document"), uploadDocument);
+router.post("/upload", upload.single("file"), uploadDocument);
 
 // Get all documents
 router.get("/", getDocuments);
